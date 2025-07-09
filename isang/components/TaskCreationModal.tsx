@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +6,15 @@ import AIAssistantModal from './AIAssistantModal';
 interface TaskCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (task: any) => void;
+  onSubmit: (task: {
+    id: string;
+    title: string;
+    category: string;
+    progress: number;
+    goalName: string;
+    image: string;
+    deadline?: string; // Changed from location and distance
+  }) => void;
   onAddCategory: (category: any) => void;
   categories: any[];
 }
@@ -24,8 +31,7 @@ export default function TaskCreationModal({
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
-  const [location, setLocation] = useState('');
-  const [distance, setDistance] = useState('');
+  const [deadline, setDeadline] = useState(''); // Changed from location and distance
   const [showNewCategoryForm, setShowNewCategoryForm] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryColor, setNewCategoryColor] = useState('from-purple-400 to-pink-500');
@@ -90,16 +96,14 @@ export default function TaskCreationModal({
         progress: 0,
         goalName: filterCategories.find(c => c.id === selectedCategory)?.name || '',
         image: imagePreview,
-        location: location,
-        distance: distance,
+        deadline: deadline, // Changed from location and distance
       });
       // 폼 초기화
       setTaskTitle('');
       setSelectedCategory('');
       setSelectedImage(null);
       setImagePreview('');
-      setLocation('');
-      setDistance('');
+      setDeadline(''); // Changed from location and distance
       onClose();
     }
   };
@@ -191,25 +195,15 @@ export default function TaskCreationModal({
               </div>
             </div>
 
-            {/* 위치 및 거리 설정 */}
+            {/* 마감 기한 설정 */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">위치 및 거리</h3>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="목적지 또는 위치 (예: 한강공원, 사무실)"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full p-3 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <input
-                  type="text"
-                  placeholder="이동 거리 (예: 3km, 10분 도보)"
-                  value={distance}
-                  onChange={(e) => setDistance(e.target.value)}
-                  className="w-full p-3 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">마감 기한 (선택)</h3>
+              <input
+                type="datetime-local"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full p-3 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
             </div>
 
             {/* Image Preview */}
@@ -242,10 +236,6 @@ export default function TaskCreationModal({
                     className="hidden"
                   />
                 </label>
-                <button className="flex-1 p-3 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 flex items-center justify-center space-x-2 hover:bg-white/80 transition-all duration-200 !rounded-button">
-                  <i className="ri-map-pin-line text-lg text-gray-600"></i>
-                  <span className="text-sm text-gray-600">위치</span>
-                </button>
                 <button 
                   onClick={() => setIsAIModalOpen(true)}
                   className="flex-1 p-3 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 flex items-center justify-center space-x-2 hover:bg-white/80 transition-all duration-200 !rounded-button"

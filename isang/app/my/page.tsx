@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, ChangeEvent } from 'react';
@@ -17,6 +16,25 @@ interface User {
   totalScore: number;
 }
 
+interface Goal {
+  id: string;
+  name: string;
+  progress: number;
+  target: number;
+  color: string;
+}
+
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  earned: boolean;
+  progress: number;
+  target: number;
+}
+
 export default function MyPage() {
   const [user, setUser] = useLocalStorage<User>('user', {
     name: '김이상',
@@ -30,21 +48,21 @@ export default function MyPage() {
   const [editedName, setEditedName] = useState(user.name);
   const [editedAvatar, setEditedAvatar] = useState(user.avatar);
 
-  const [goals, setGoals] = useLocalStorage('goals', [
-    { id: '1', name: '운동', progress: 85, target: 100, color: 'from-orange-400 to-red-500' },
-    { id: '2', name: '학습', progress: 72, target: 100, color: 'from-blue-400 to-indigo-500' },
-    { id: '3', name: '업무', progress: 90, target: 100, color: 'from-green-400 to-emerald-500' },
-    { id: '4', name: '건강', progress: 68, target: 100, color: 'from-cyan-400 to-teal-500' },
-    { id: '5', name: '개인성장', progress: 55, target: 100, color: 'from-purple-400 to-pink-500' },
+  const [goals, setGoals] = useLocalStorage<Goal[]>('goals', [
+    { id: '1', name: '운동', progress: 0, target: 100, color: 'from-orange-400 to-red-500' },
+    { id: '2', name: '학습', progress: 0, target: 100, color: 'from-blue-400 to-indigo-500' },
+    { id: '3', name: '업무', progress: 0, target: 100, color: 'from-green-400 to-emerald-500' },
+    { id: '4', name: '건강', progress: 0, target: 100, color: 'from-cyan-400 to-teal-500' },
+    { id: '5', name: '개인성장', progress: 0, target: 100, color: 'from-purple-400 to-pink-500' },
   ]);
 
-  const [badges, setBadges] = useLocalStorage('badges', [
-    { id: '1', name: '3일 연속', description: '3일 연속 할일 완료', icon: 'ri-fire-fill', color: 'from-orange-400 to-red-500', earned: true, progress: 3, target: 3 },
-    { id: '2', name: '100점 돌파', description: '총 점수 100점 달성', icon: 'ri-trophy-fill', color: 'from-yellow-400 to-orange-500', earned: true, progress: 2847, target: 100 },
-    { id: '3', name: '완벽한 주', description: '일주일 모든 할일 완료', icon: 'ri-star-fill', color: 'from-purple-400 to-pink-500', earned: true, progress: 1, target: 1 },
-    { id: '4', name: '초보 탈출', description: '레벨 10 달성', icon: 'ri-rocket-fill', color: 'from-blue-400 to-indigo-500', earned: true, progress: 15, target: 10 },
-    { id: '5', name: '월간 왕', description: '한 달간 1위 유지', icon: 'ri-crown-fill', color: 'from-purple-500 to-pink-600', earned: false, progress: 15, target: 30 },
-    { id: '6', name: '마스터', description: '레벨 50 달성', icon: 'ri-award-fill', color: 'from-green-400 to-emerald-500', earned: false, progress: 15, target: 50 },
+  const [badges, setBadges] = useLocalStorage<Badge[]>('badges', [
+    { id: '1', name: '3일 연속', description: '3일 연속 할일 완료', icon: 'ri-fire-fill', color: 'from-orange-400 to-red-500', earned: false, progress: 0, target: 3 },
+    { id: '2', name: '100점 돌파', description: '총 점수 100점 달성', icon: 'ri-trophy-fill', color: 'from-yellow-400 to-orange-500', earned: false, progress: 0, target: 100 },
+    { id: '3', name: '완벽한 주', description: '일주일 모든 할일 완료', icon: 'ri-star-fill', color: 'from-purple-400 to-pink-500', earned: false, progress: 0, target: 1 },
+    { id: '4', name: '초보 탈출', description: '레벨 10 달성', icon: 'ri-rocket-fill', color: 'from-blue-400 to-indigo-500', earned: false, progress: 0, target: 10 },
+    { id: '5', name: '월간 왕', description: '한 달간 1위 유지', icon: 'ri-crown-fill', color: 'from-purple-500 to-pink-600', earned: false, progress: 0, target: 30 },
+    { id: '6', name: '마스터', description: '레벨 50 달성', icon: 'ri-award-fill', color: 'from-green-400 to-emerald-500', earned: false, progress: 0, target: 50 },
   ]);
 
   const [recentActivities, setRecentActivities] = useLocalStorage('recentActivities', [
@@ -91,19 +109,6 @@ export default function MyPage() {
     }
   };
 
-  const updateBadgeProgress = () => {
-    setBadges(badges.map(badge => {
-      let newProgress = badge.progress;
-      switch(badge.id) {
-        case '1': newProgress = Math.min(badge.target, badge.progress + 1); break;
-        case '2': newProgress = user.totalScore; break;
-        case '5': newProgress = Math.min(badge.target, badge.progress + 1); break;
-        case '6': newProgress = user.level; break;
-      }
-      return { ...badge, progress: newProgress, earned: newProgress >= badge.target };
-    }));
-  };
-
   const deleteActivity = (id: string) => {
     setRecentActivities(recentActivities.filter(activity => activity.id !== id));
   };
@@ -119,10 +124,6 @@ export default function MyPage() {
   const deleteRecord = (id: string) => {
     setMyRecords(myRecords.filter(record => record.id !== id));
   };
-
-  useEffect(() => {
-    updateBadgeProgress();
-  }, [user.totalScore, user.level]);
 
   // When user data changes, update the edited state as well
   useEffect(() => {
@@ -220,7 +221,7 @@ export default function MyPage() {
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div
                     className={`h-full bg-gradient-to-r ${goal.color} transition-all duration-500 shadow-sm`}
-                    style={{ width: `${goal.progress}%` }}
+                    style={{ width: `${(goal.progress / goal.target) * 100}%` }}
                   ></div>
                 </div>
               </div>
