@@ -10,7 +10,7 @@ interface Task {
   title: string;
   category: string;
   goal?: string;
-  dueDate?: string;
+  deadline?: string; // Changed from dueDate to deadline
   priority: 'low' | 'medium' | 'high';
   completed: boolean;
   createdAt: string;
@@ -22,7 +22,7 @@ export default function AddPage() {
   const [taskTitle, setTaskTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedGoal, setSelectedGoal] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [deadline, setDeadline] = useState(''); // Changed from dueDate
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   const categories = [
@@ -54,7 +54,7 @@ export default function AddPage() {
         title: taskTitle.trim(),
         category: selectedCategory,
         goal: selectedGoal,
-        dueDate: dueDate,
+        deadline: deadline, // Changed from dueDate
         priority: priority,
         completed: false,
         createdAt: new Date().toISOString(),
@@ -154,13 +154,13 @@ export default function AddPage() {
           </div>
         </div>
 
-        {/* Due Date */}
+        {/* Deadline */}
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">마감일</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">마감 기한 (선택)</h3>
           <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
+            type="datetime-local"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
             className="w-full p-4 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
         </div>

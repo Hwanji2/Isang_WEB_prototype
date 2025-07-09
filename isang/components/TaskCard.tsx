@@ -1,16 +1,16 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TaskCardProps {
   id: string;
   title: string;
-  goalName: string;
-  progress: number;
+  goalName?: string;
+  progress?: number;
   category: string;
-  priority: string;
-  location?: string;
+  priority: 'high' | 'medium' | 'low';
+  deadline?: string;
+  completed: boolean;
   onComplete: (id: string) => void;
   showDeleteMode?: boolean;
   onDelete?: (id: string) => void;
@@ -20,15 +20,38 @@ export default function TaskCard({
   id, 
   title, 
   goalName, 
-  progress, 
+  progress = 0, 
   category, 
   priority, 
-  location, 
+  deadline,
+  completed,
   onComplete, 
   showDeleteMode = false,
   onDelete 
 }: TaskCardProps) {
   const [isPressed, setIsPressed] = useState(false);
+  const [isOverdue, setIsOverdue] = useState(false);
+  const [formattedDeadline, setFormattedDeadline] = useState('');
+
+  useEffect(() => {
+    if (deadline) {
+      const deadlineDate = new Date(deadline);
+      const now = new Date();
+      if (deadlineDate < now && !completed) {
+        setIsOverdue(true);
+      }
+      setFormattedDeadline(
+        deadlineDate.toLocaleString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
+    }
+  }, [deadline, completed]);
+
 
   const getCategoryColor = (category: string) => {
     const colors = {
@@ -60,19 +83,25 @@ export default function TaskCard({
   };
 
   const handleCardClick = () => {
-    if (!showDeleteMode) {
+    if (!showDeleteMode && !completed) {
       onComplete(id);
     }
   };
 
+  const cardClasses = `
+    relative bg-white/70 backdrop-blur-sm rounded-2xl p-4 mb-4 shadow-lg transition-all duration-300
+    ${!completed ? 'cursor-pointer' : ''}
+    ${isPressed && !completed ? 'scale-95' : 'hover:scale-[1.02]'}
+    ${isOverdue ? 'border-2 border-red-500' : ''}
+    ${completed ? 'opacity-60' : ''}
+  `;
+
   return (
     <div
-      className={`relative bg-white/70 backdrop-blur-sm rounded-2xl p-4 mb-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer transform ${
-        isPressed ? 'scale-95' : 'hover:scale-[1.02]'
-      }`}
-      onMouseDown={() => setIsPressed(true)}
-      onMouseUp={() => setIsPressed(false)}
-      onMouseLeave={() => setIsPressed(false)}
+      className={cardClasses}
+      onMouseDown={() => !completed && setIsPressed(true)}
+      onMouseUp={() => !completed && setIsPressed(false)}
+      onMouseLeave={() => !completed && setIsPressed(false)}
       onClick={handleCardClick}
     >
       <div className={`absolute inset-0 bg-gradient-to-r ${getCategoryColor(category)} opacity-10 rounded-2xl`}></div>
@@ -91,24 +120,23 @@ export default function TaskCard({
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-              {goalName}
-            </span>
+          <div className="flex items-center space-x-2 flex-wrap">
+            {goalName && <span className="text-xs font-medium text-purple-600 bg-purple-100 px-2 py-1 rounded-full">{goalName}</span>}
             <div className={`w-2 h-2 ${getPriorityColor(priority)} rounded-full`}></div>
             <span className="text-xs text-gray-500">{getPriorityText(priority)}</span>
+            {isOverdue && <span className="text-xs font-bold text-red-500 bg-red-100 px-2 py-1 rounded-full">기한 지남</span>}
           </div>
           <div className="w-8 h-8 flex items-center justify-center">
-            <i className="ri-checkbox-blank-circle-line text-xl text-gray-400"></i>
+            <i className={`text-xl ${completed ? 'ri-checkbox-circle-fill text-purple-500' : 'ri-checkbox-blank-circle-line text-gray-400'}`}></i>
           </div>
         </div>
         
-        <h3 className="text-base font-semibold text-gray-800 mb-2">{title}</h3>
+        <h3 className={`text-base font-semibold text-gray-800 mb-2 ${completed ? 'line-through' : ''}`}>{title}</h3>
         
-        {location && (
-          <div className="flex items-center space-x-1 mb-3">
-            <i className="ri-map-pin-line text-sm text-gray-500"></i>
-            <span className="text-sm text-gray-600">{location}</span>
+        {deadline && (
+          <div className="flex items-center space-x-1 mb-3 text-sm text-gray-600">
+            <i className="ri-time-line text-sm"></i>
+            <span>{formattedDeadline} 까지</span>
           </div>
         )}
         
@@ -116,14 +144,14 @@ export default function TaskCard({
           <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
             <div 
               className={`h-full bg-gradient-to-r ${getCategoryColor(category)} transition-all duration-500 shadow-sm`}
-              style={{ width: `${progress}%` }}
+              style={{ width: `${completed ? 100 : progress}%` }}
             ></div>
           </div>
-          <span className="text-sm font-medium text-gray-600">{progress}%</span>
+          <span className="text-sm font-medium text-gray-600">{completed ? 100 : progress}%</span>
         </div>
       </div>
       
-      <div className="absolute top-2 right-2 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>
+      {!completed && <div className="absolute top-2 right-2 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse"></div>}
     </div>
   );
 }

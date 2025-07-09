@@ -16,7 +16,7 @@ interface Task {
   progress?: number;
   category: string;
   priority: 'high' | 'medium' | 'low';
-  location?: string;
+  deadline?: string;
   completed: boolean;
   createdAt: string;
   completedAt?: string;
@@ -59,20 +59,13 @@ export default function Home() {
 
   const [showDeleteMode, setShowDeleteMode] = useState(false);
 
-  // AI 우선순위 자동 설정
   const getAIPriority = (title: string, category: string) => {
     const urgentKeywords = ['긴급', '마감', '중요', '회의', '프로젝트', '시험', '발표'];
     const routineKeywords = ['물', '운동', '산책', '독서', '정리'];
-    
     const titleLower = title.toLowerCase();
-    
-    if (urgentKeywords.some(keyword => titleLower.includes(keyword))) {
-      return 'high';
-    } else if (routineKeywords.some(keyword => titleLower.includes(keyword))) {
-      return 'low';
-    } else {
-      return 'medium';
-    }
+    if (urgentKeywords.some(keyword => titleLower.includes(keyword))) return 'high';
+    if (routineKeywords.some(keyword => titleLower.includes(keyword))) return 'low';
+    return 'medium';
   };
 
   const handleTaskComplete = (taskId: string) => {
@@ -92,8 +85,6 @@ export default function Home() {
   const handleRecordConfirm = (settings: { public: boolean; share: boolean }) => {
     if (selectedTask && taskProof) {
         const now = new Date();
-        
-        // 1. Update the task's completion status
         const updatedTasks = tasks.map(task => 
             task.id === selectedTask.id 
             ? { ...task, completed: true, progress: 100, completedAt: now.toISOString() }
@@ -101,7 +92,6 @@ export default function Home() {
         );
         setTasks(updatedTasks);
 
-        // 2. Create a new activity for the user's private activity log
         const newActivity = {
             id: `activity-${Date.now()}`,
             task: `${selectedTask.title} 완료`,
@@ -111,26 +101,30 @@ export default function Home() {
         };
         setRecentActivities([newActivity, ...recentActivities]);
 
-        // 3. Create the record for "My Records". Its visibility is controlled by the toggle.
         const newRecord: MyRecord = {
             id: `record-${Date.now()}`,
             date: now.toISOString().split('T')[0],
             content: taskProof.text,
             image: taskProof.image,
-            public: settings.public, // This determines if it shows in the feed
+            public: settings.public,
         };
         setMyRecords([newRecord, ...myRecords]);
     }
-    
-    // 4. Reset states
     setSelectedTask(null);
     setTaskProof(null);
     setIsRecordModalOpen(false);
   };
 
-  const handleAddTask = (newTask: any) => {
-    const priority = getAIPriority(newTask.title, newTask.category);
-    setTasks([...tasks, { ...newTask, id: `task-${Date.now()}`, priority, completed: false, createdAt: new Date().toISOString() }]);
+  const handleAddTask = (newTaskData: Omit<Task, 'id' | 'completed' | 'createdAt'>) => {
+    const priority = getAIPriority(newTaskData.title, newTaskData.category);
+    const newTask: Task = {
+        ...newTaskData,
+        id: `task-${Date.now()}`,
+        priority: newTaskData.priority || priority,
+        completed: false,
+        createdAt: new Date().toISOString(),
+    };
+    setTasks([...tasks, newTask]);
   };
 
   const handleAddCategory = (newCategory: any) => {
@@ -155,12 +149,29 @@ export default function Home() {
         return category && task.category === category.id;
       });
 
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
+  const getDynamicPriority = (task: Task): number => {
     const priorityOrder = { high: 3, medium: 2, low: 1 };
+    let score = priorityOrder[task.priority];
+
+    if (task.deadline) {
+      const deadlineTime = new Date(task.deadline).getTime();
+      const now = new Date().getTime();
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (deadlineTime < now) {
+        score += 20; // Overdue
+      } else if (deadlineTime < now + oneDay) {
+        score += 10; // Due within 24 hours
+      }
+    }
+    return score;
+  };
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
     }
-    return priorityOrder[b.priority] - priorityOrder[a.priority];
+    return getDynamicPriority(b) - getDynamicPriority(a);
   });
 
   return (
