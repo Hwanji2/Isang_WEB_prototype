@@ -3,14 +3,27 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '../../components/BottomNav';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+
+interface Task {
+  id: string;
+  title: string;
+  category: string;
+  goal?: string;
+  dueDate?: string;
+  priority: 'low' | 'medium' | 'high';
+  completed: boolean;
+  createdAt: string;
+}
 
 export default function AddPage() {
   const router = useRouter();
+  const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [taskTitle, setTaskTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedGoal, setSelectedGoal] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [priority, setPriority] = useState('medium');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   const categories = [
     { id: 'fitness', name: '운동', color: 'from-orange-400 to-red-500', icon: 'ri-run-line' },
@@ -36,7 +49,17 @@ export default function AddPage() {
 
   const handleSubmit = () => {
     if (taskTitle.trim() && selectedCategory) {
-      // Add task logic here
+      const newTask: Task = {
+        id: `task-${Date.now()}`,
+        title: taskTitle.trim(),
+        category: selectedCategory,
+        goal: selectedGoal,
+        dueDate: dueDate,
+        priority: priority,
+        completed: false,
+        createdAt: new Date().toISOString(),
+      };
+      setTasks([...tasks, newTask]);
       router.push('/');
     }
   };
@@ -118,7 +141,7 @@ export default function AddPage() {
             {priorities.map((p) => (
               <button
                 key={p.id}
-                onClick={() => setPriority(p.id)}
+                onClick={() => setPriority(p.id as 'low' | 'medium' | 'high')}
                 className={`flex-1 p-3 rounded-2xl text-sm font-medium transition-all duration-200 !rounded-button ${
                   priority === p.id
                     ? p.color

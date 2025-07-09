@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,62 +7,35 @@ import FloatingAddButton from '../components/FloatingAddButton';
 import TaskCreationModal from '../components/TaskCreationModal';
 import FocusMode from '../components/FocusMode';
 import RecordVisibilityModal from '../components/RecordVisibilityModal';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+
+interface Task {
+  id: string;
+  title: string;
+  goalName?: string;
+  progress?: number;
+  category: string;
+  priority: 'high' | 'medium' | 'low';
+  location?: string;
+  completed: boolean;
+  createdAt: string;
+  completedAt?: string;
+}
+
+interface Category {
+    id: string;
+    name: string;
+    color: string;
+}
 
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState('전체');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [tasks, setTasks] = useState([
-    {
-      id: '1',
-      title: '30분 조깅하기',
-      goalName: '운동',
-      progress: 75,
-      category: 'fitness',
-      priority: 'high',
-      location: '한강공원'
-    },
-    {
-      id: '2', 
-      title: '영어 단어 50개 외우기',
-      goalName: '학습',
-      progress: 60,
-      category: 'study',
-      priority: 'medium',
-      location: ''
-    },
-    {
-      id: '3',
-      title: '프로젝트 기획서 작성',
-      goalName: '업무',
-      progress: 30,
-      category: 'work',
-      priority: 'high',
-      location: '사무실'
-    },
-    {
-      id: '4',
-      title: '물 2L 마시기',
-      goalName: '건강',
-      progress: 80,
-      category: 'health',
-      priority: 'low',
-      location: ''
-    },
-    {
-      id: '5',
-      title: '독서 1시간',
-      goalName: '개인성장',
-      progress: 45,
-      category: 'personal',
-      priority: 'medium',
-      location: '도서관'
-    }
-  ]);
-
-  const [categories, setCategories] = useState([
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
+  const [categories, setCategories] = useLocalStorage<Category[]>('categories', [
     { id: 'all', name: '전체', color: 'from-gray-400 to-gray-500' },
     { id: 'fitness', name: '운동', color: 'from-orange-400 to-red-500' },
     { id: 'study', name: '학습', color: 'from-blue-400 to-indigo-500' },
@@ -71,6 +43,8 @@ export default function Home() {
     { id: 'health', name: '건강', color: 'from-cyan-400 to-teal-500' },
     { id: 'personal', name: '개인성장', color: 'from-purple-400 to-pink-500' },
   ]);
+  const [recentActivities, setRecentActivities] = useLocalStorage<any[]>('recentActivities', []);
+
 
   const [showDeleteMode, setShowDeleteMode] = useState(false);
 
@@ -105,11 +79,22 @@ export default function Home() {
 
   const handleRecordConfirm = (settings: any) => {
     if (selectedTask) {
-      setTasks(tasks.map(task => 
-        task.id === selectedTask.id 
-          ? { ...task, progress: 100 }
-          : task
-      ));
+        const now = new Date();
+        const updatedTasks = tasks.map(task => 
+            task.id === selectedTask.id 
+            ? { ...task, completed: true, progress: 100, completedAt: now.toISOString() }
+            : task
+        );
+        setTasks(updatedTasks);
+
+        const newActivity = {
+            id: `activity-${Date.now()}`,
+            task: `${selectedTask.title} 완료`,
+            time: '방금 전',
+            type: 'task',
+            proof: `"${selectedTask.title}" 할 일을 성공적으로 마쳤습니다.`
+        };
+        setRecentActivities([newActivity, ...recentActivities]);
     }
     setSelectedTask(null);
     setIsRecordModalOpen(false);
@@ -117,7 +102,7 @@ export default function Home() {
 
   const handleAddTask = (newTask: any) => {
     const priority = getAIPriority(newTask.title, newTask.category);
-    setTasks([...tasks, { ...newTask, priority }]);
+    setTasks([...tasks, { ...newTask, id: `task-${Date.now()}`, priority, completed: false, createdAt: new Date().toISOString() }]);
   };
 
   const handleAddCategory = (newCategory: any) => {
@@ -144,8 +129,11 @@ export default function Home() {
       });
 
   // 우선순위별 정렬
-  const sortedTasks = filteredTasks.sort((a, b) => {
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
     const priorityOrder = { high: 3, medium: 2, low: 1 };
+    if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+    }
     return priorityOrder[b.priority] - priorityOrder[a.priority];
   });
 
@@ -206,9 +194,9 @@ export default function Home() {
             <div key={task.id} className="relative">
               <TaskCard
                 {...task}
-                onComplete={handleTaskComplete}
+                onComplete={() => handleTaskComplete(task.id)}
                 showDeleteMode={showDeleteMode}
-                onDelete={handleDeleteTask}
+                onDelete={() => handleDeleteTask(task.id)}
               />
             </div>
           ))}

@@ -1,8 +1,12 @@
+
 'use client';
 
 import { useState, useEffect, ChangeEvent } from 'react';
 import Link from 'next/link';
 import BottomNav from '../../components/BottomNav';
+
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+
 
 // Define the user type for better type checking
 interface User {
@@ -14,7 +18,7 @@ interface User {
 }
 
 export default function MyPage() {
-  const [user, setUser] = useState<User>({
+  const [user, setUser] = useLocalStorage<User>('user', {
     name: '김이상',
     nickname: '@isang_achiever',
     avatar: 'https://readdy.ai/api/search-image?query=friendly%20Korean%20person%20profile%20photo%2C%20professional%20headshot%2C%20clean%20background%2C%20realistic%20portrait%20photography%2C%20natural%20lighting&width=120&height=120&seq=mypage1&orientation=squarish',
@@ -26,7 +30,7 @@ export default function MyPage() {
   const [editedName, setEditedName] = useState(user.name);
   const [editedAvatar, setEditedAvatar] = useState(user.avatar);
 
-  const [goals] = useState([
+  const [goals, setGoals] = useLocalStorage('goals', [
     { id: '1', name: '운동', progress: 85, target: 100, color: 'from-orange-400 to-red-500' },
     { id: '2', name: '학습', progress: 72, target: 100, color: 'from-blue-400 to-indigo-500' },
     { id: '3', name: '업무', progress: 90, target: 100, color: 'from-green-400 to-emerald-500' },
@@ -34,7 +38,7 @@ export default function MyPage() {
     { id: '5', name: '개인성장', progress: 55, target: 100, color: 'from-purple-400 to-pink-500' },
   ]);
 
-  const [badges, setBadges] = useState([
+  const [badges, setBadges] = useLocalStorage('badges', [
     { id: '1', name: '3일 연속', description: '3일 연속 할일 완료', icon: 'ri-fire-fill', color: 'from-orange-400 to-red-500', earned: true, progress: 3, target: 3 },
     { id: '2', name: '100점 돌파', description: '총 점수 100점 달성', icon: 'ri-trophy-fill', color: 'from-yellow-400 to-orange-500', earned: true, progress: 2847, target: 100 },
     { id: '3', name: '완벽한 주', description: '일주일 모든 할일 완료', icon: 'ri-star-fill', color: 'from-purple-400 to-pink-500', earned: true, progress: 1, target: 1 },
@@ -43,7 +47,7 @@ export default function MyPage() {
     { id: '6', name: '마스터', description: '레벨 50 달성', icon: 'ri-award-fill', color: 'from-green-400 to-emerald-500', earned: false, progress: 15, target: 50 },
   ]);
 
-  const [recentActivities, setRecentActivities] = useState([
+  const [recentActivities, setRecentActivities] = useLocalStorage('recentActivities', [
     { id: '1', task: '30분 조깅 완료', time: '2시간 전', type: 'fitness', proof: '한강공원에서 3km 달리기 완료!' },
     { id: '2', task: '영어 단어 50개 암기', time: '4시간 전', type: 'study', proof: '오늘 새로운 단어 50개 외웠어요.' },
     { id: '3', task: '프로젝트 회의 참석', time: '어제', type: 'work', proof: '팀 회의에서 새로운 아이디어 제안' },
@@ -51,7 +55,7 @@ export default function MyPage() {
     { id: '5', task: '물 2L 마시기', time: '2일 전', type: 'health', proof: '하루 권장량 달성!' },
   ]);
 
-  const [myRecords, setMyRecords] = useState([
+  const [myRecords, setMyRecords] = useLocalStorage('myRecords', [
     { id: '1', date: '2024-01-15', content: '오늘 정말 힘들었지만 모든 할일을 완료했다!', image: '', public: true },
     { id: '2', date: '2024-01-14', content: '운동 30분 완료. 체력이 조금씩 늘고 있는 것 같다.', image: '', public: false },
     { id: '3', date: '2024-01-13', content: '새로운 프로젝트 시작. 기대된다!', image: '', public: true },
@@ -119,6 +123,13 @@ export default function MyPage() {
   useEffect(() => {
     updateBadgeProgress();
   }, [user.totalScore, user.level]);
+
+  // When user data changes, update the edited state as well
+  useEffect(() => {
+    setEditedName(user.name);
+    setEditedAvatar(user.avatar);
+  }, [user]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 pb-24">
@@ -198,7 +209,7 @@ export default function MyPage() {
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
           <h3 className="text-lg font-bold text-gray-800 mb-4">목표 진행률</h3>
           <div className="space-y-4">
-            {goals.map((goal) => (
+            {goals.map((goal:any) => (
               <div key={goal.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-700">{goal.name}</span>
@@ -247,7 +258,7 @@ export default function MyPage() {
             </button>
           </div>
           <div className="grid grid-cols-3 gap-4">
-            {badges.slice(0, 6).map((badge) => (
+            {badges.slice(0, 6).map((badge:any) => (
               <div
                 key={badge.id}
                 className={`aspect-square rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-300 ${
@@ -283,7 +294,7 @@ export default function MyPage() {
             </button>
           </div>
           <div className="space-y-3">
-            {(showRecords ? myRecords : myRecords.slice(0, 2)).map((record) => (
+            {(showRecords ? myRecords : myRecords.slice(0, 2)).map((record:any) => (
               <div
                 key={record.id}
                 className="relative p-4 bg-white/50 rounded-2xl hover:bg-white/70 transition-all duration-200"
@@ -331,7 +342,7 @@ export default function MyPage() {
             </div>
           </div>
           <div className="space-y-3">
-            {(showActivities ? recentActivities : recentActivities.slice(0, 3)).map((activity) => (
+            {(showActivities ? recentActivities : recentActivities.slice(0, 3)).map((activity:any) => (
               <div
                 key={activity.id}
                 className="relative flex items-center space-x-3 p-3 bg-white/50 rounded-2xl hover:bg-white/70 transition-all duration-200"
@@ -373,7 +384,7 @@ export default function MyPage() {
               </button>
             </div>
             <div className="space-y-4">
-              {badges.map((badge) => (
+              {badges.map((badge:any) => (
                 <div
                   key={badge.id}
                   className={`p-4 rounded-2xl transition-all duration-300 ${
