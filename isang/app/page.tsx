@@ -28,12 +28,22 @@ interface Category {
     color: string;
 }
 
+interface MyRecord {
+    id: string;
+    date: string;
+    content: string;
+    image: string | null;
+    public: boolean;
+}
+
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState('전체');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [taskProof, setTaskProof] = useState<{ text: string; image: string | null } | null>(null);
+
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [categories, setCategories] = useLocalStorage<Category[]>('categories', [
     { id: 'all', name: '전체', color: 'from-gray-400 to-gray-500' },
@@ -44,6 +54,7 @@ export default function Home() {
     { id: 'personal', name: '개인성장', color: 'from-purple-400 to-pink-500' },
   ]);
   const [recentActivities, setRecentActivities] = useLocalStorage<any[]>('recentActivities', []);
+  const [myRecords, setMyRecords] = useLocalStorage<MyRecord[]>('myRecords', []);
 
 
   const [showDeleteMode, setShowDeleteMode] = useState(false);
@@ -72,14 +83,17 @@ export default function Home() {
     }
   };
 
-  const handleFocusComplete = (proof: any) => {
+  const handleFocusComplete = (proof: { text: string; image: string | null }) => {
+    setTaskProof(proof);
     setIsFocusModeOpen(false);
     setIsRecordModalOpen(true);
   };
 
-  const handleRecordConfirm = (settings: any) => {
-    if (selectedTask) {
+  const handleRecordConfirm = (settings: { public: boolean; share: boolean }) => {
+    if (selectedTask && taskProof) {
         const now = new Date();
+        
+        // 1. Update the task's completion status
         const updatedTasks = tasks.map(task => 
             task.id === selectedTask.id 
             ? { ...task, completed: true, progress: 100, completedAt: now.toISOString() }
@@ -87,16 +101,30 @@ export default function Home() {
         );
         setTasks(updatedTasks);
 
+        // 2. Create a new activity for the user's private activity log
         const newActivity = {
             id: `activity-${Date.now()}`,
             task: `${selectedTask.title} 완료`,
             time: '방금 전',
             type: 'task',
-            proof: `"${selectedTask.title}" 할 일을 성공적으로 마쳤습니다.`
+            proof: taskProof.text || `"${selectedTask.title}" 할 일을 성공적으로 마쳤습니다.`
         };
         setRecentActivities([newActivity, ...recentActivities]);
+
+        // 3. Create the record for "My Records". Its visibility is controlled by the toggle.
+        const newRecord: MyRecord = {
+            id: `record-${Date.now()}`,
+            date: now.toISOString().split('T')[0],
+            content: taskProof.text,
+            image: taskProof.image,
+            public: settings.public, // This determines if it shows in the feed
+        };
+        setMyRecords([newRecord, ...myRecords]);
     }
+    
+    // 4. Reset states
     setSelectedTask(null);
+    setTaskProof(null);
     setIsRecordModalOpen(false);
   };
 
@@ -116,7 +144,6 @@ export default function Home() {
   const handleDeleteCategory = (categoryId: string) => {
     if (categoryId !== 'all') {
       setCategories(categories.filter(cat => cat.id !== categoryId));
-      // 해당 카테고리의 할일들도 삭제
       setTasks(tasks.filter(task => task.category !== categoryId));
     }
   };
@@ -128,7 +155,6 @@ export default function Home() {
         return category && task.category === category.id;
       });
 
-  // 우선순위별 정렬
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     const priorityOrder = { high: 3, medium: 2, low: 1 };
     if (a.completed !== b.completed) {
