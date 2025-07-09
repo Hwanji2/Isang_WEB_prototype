@@ -1,0 +1,16 @@
+# 빌드 결과물 무시
+.next/
+out/
+
+# 정적 파일 중 용량 큰 것 무시
+public/assets/large-image.png
+public/assets/heavy-video.mp4
+
+# 특정 확장자 무시
+*.zip
+*.mp4
+*.psd
+
+# 전체 폴더 무시
+my-heavy-folder/
+node_modules/
