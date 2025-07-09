@@ -1,18 +1,30 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import Link from 'next/link';
 import BottomNav from '../../components/BottomNav';
 
+// Define the user type for better type checking
+interface User {
+  name: string;
+  nickname: string;
+  avatar: string;
+  level: number;
+  totalScore: number;
+}
+
 export default function MyPage() {
-  const [user] = useState({
+  const [user, setUser] = useState<User>({
     name: '김이상',
     nickname: '@isang_achiever',
     avatar: 'https://readdy.ai/api/search-image?query=friendly%20Korean%20person%20profile%20photo%2C%20professional%20headshot%2C%20clean%20background%2C%20realistic%20portrait%20photography%2C%20natural%20lighting&width=120&height=120&seq=mypage1&orientation=squarish',
     level: 15,
     totalScore: 2847
   });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(user.name);
+  const [editedAvatar, setEditedAvatar] = useState(user.avatar);
 
   const [goals] = useState([
     { id: '1', name: '운동', progress: 85, target: 100, color: 'from-orange-400 to-red-500' },
@@ -23,66 +35,12 @@ export default function MyPage() {
   ]);
 
   const [badges, setBadges] = useState([
-    { 
-      id: '1', 
-      name: '3일 연속', 
-      description: '3일 연속 할일 완료',
-      icon: 'ri-fire-fill', 
-      color: 'from-orange-400 to-red-500', 
-      earned: true,
-      progress: 3,
-      target: 3
-    },
-    { 
-      id: '2', 
-      name: '100점 돌파', 
-      description: '총 점수 100점 달성',
-      icon: 'ri-trophy-fill', 
-      color: 'from-yellow-400 to-orange-500', 
-      earned: true,
-      progress: 2847,
-      target: 100
-    },
-    { 
-      id: '3', 
-      name: '완벽한 주', 
-      description: '일주일 모든 할일 완료',
-      icon: 'ri-star-fill', 
-      color: 'from-purple-400 to-pink-500', 
-      earned: true,
-      progress: 1,
-      target: 1
-    },
-    { 
-      id: '4', 
-      name: '초보 탈출', 
-      description: '레벨 10 달성',
-      icon: 'ri-rocket-fill', 
-      color: 'from-blue-400 to-indigo-500', 
-      earned: true,
-      progress: 15,
-      target: 10
-    },
-    { 
-      id: '5', 
-      name: '월간 왕', 
-      description: '한 달간 1위 유지',
-      icon: 'ri-crown-fill', 
-      color: 'from-purple-500 to-pink-600', 
-      earned: false,
-      progress: 15,
-      target: 30
-    },
-    { 
-      id: '6', 
-      name: '마스터', 
-      description: '레벨 50 달성',
-      icon: 'ri-award-fill', 
-      color: 'from-green-400 to-emerald-500', 
-      earned: false,
-      progress: 15,
-      target: 50
-    },
+    { id: '1', name: '3일 연속', description: '3일 연속 할일 완료', icon: 'ri-fire-fill', color: 'from-orange-400 to-red-500', earned: true, progress: 3, target: 3 },
+    { id: '2', name: '100점 돌파', description: '총 점수 100점 달성', icon: 'ri-trophy-fill', color: 'from-yellow-400 to-orange-500', earned: true, progress: 2847, target: 100 },
+    { id: '3', name: '완벽한 주', description: '일주일 모든 할일 완료', icon: 'ri-star-fill', color: 'from-purple-400 to-pink-500', earned: true, progress: 1, target: 1 },
+    { id: '4', name: '초보 탈출', description: '레벨 10 달성', icon: 'ri-rocket-fill', color: 'from-blue-400 to-indigo-500', earned: true, progress: 15, target: 10 },
+    { id: '5', name: '월간 왕', description: '한 달간 1위 유지', icon: 'ri-crown-fill', color: 'from-purple-500 to-pink-600', earned: false, progress: 15, target: 30 },
+    { id: '6', name: '마스터', description: '레벨 50 달성', icon: 'ri-award-fill', color: 'from-green-400 to-emerald-500', earned: false, progress: 15, target: 50 },
   ]);
 
   const [recentActivities, setRecentActivities] = useState([
@@ -103,31 +61,42 @@ export default function MyPage() {
   const [showRecords, setShowRecords] = useState(false);
   const [showActivities, setShowActivities] = useState(false);
 
+  const handleSave = () => {
+    setUser(prevUser => ({
+      ...prevUser,
+      name: editedName,
+      avatar: editedAvatar,
+    }));
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditedName(user.name);
+    setEditedAvatar(user.avatar);
+    setIsEditing(false);
+  };
+
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditedAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const updateBadgeProgress = () => {
     setBadges(badges.map(badge => {
       let newProgress = badge.progress;
-      
-      // 배지별 진행도 업데이트 로직
       switch(badge.id) {
-        case '1': // 3일 연속
-          newProgress = Math.min(badge.target, badge.progress + 1);
-          break;
-        case '2': // 100점 돌파
-          newProgress = user.totalScore;
-          break;
-        case '5': // 월간 왕
-          newProgress = Math.min(badge.target, badge.progress + 1);
-          break;
-        case '6': // 마스터
-          newProgress = user.level;
-          break;
+        case '1': newProgress = Math.min(badge.target, badge.progress + 1); break;
+        case '2': newProgress = user.totalScore; break;
+        case '5': newProgress = Math.min(badge.target, badge.progress + 1); break;
+        case '6': newProgress = user.level; break;
       }
-      
-      return {
-        ...badge,
-        progress: newProgress,
-        earned: newProgress >= badge.target
-      };
+      return { ...badge, progress: newProgress, earned: newProgress >= badge.target };
     }));
   };
 
@@ -136,7 +105,6 @@ export default function MyPage() {
   };
 
   const refreshActivities = () => {
-    // 활동 새로고침 로직
     const newActivities = [
       { id: Date.now().toString(), task: '새로운 활동 추가됨', time: '방금 전', type: 'fitness', proof: '새로고침으로 추가된 활동' },
       ...recentActivities.slice(0, 4)
@@ -154,7 +122,6 @@ export default function MyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 pb-24">
-      {/* Header */}
       <div className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-b border-white/20 z-40">
         <div className="flex items-center justify-between p-4">
           <h1 className="text-xl font-bold text-gray-800">내 정보</h1>
@@ -165,31 +132,66 @@ export default function MyPage() {
       </div>
 
       <div className="pt-20 px-4 space-y-6">
-        {/* Profile Section */}
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400 p-1">
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-full h-full rounded-full object-cover bg-white"
-              />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-800">{user.name}</h2>
-              <p className="text-gray-600">{user.nickname}</p>
-              <div className="flex items-center space-x-4 mt-2">
-                <div className="flex items-center space-x-1">
-                  <i className="ri-vip-crown-fill text-yellow-500"></i>
-                  <span className="text-sm font-medium">레벨 {user.level}</span>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="relative w-20 h-20">
+                  <img
+                    src={editedAvatar}
+                    alt="Avatar Preview"
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                  <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center cursor-pointer text-white hover:bg-purple-700">
+                    <i className="ri-camera-line"></i>
+                    <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                  </label>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <i className="ri-coin-fill text-purple-500"></i>
-                  <span className="text-sm font-medium">{user.totalScore}점</span>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="w-full text-xl font-bold text-gray-800 border-b-2 border-purple-300 focus:border-purple-500 outline-none bg-transparent"
+                  />
+                  <p className="text-gray-600">{user.nickname}</p>
                 </div>
               </div>
+              <div className="flex justify-end space-x-2">
+                <button onClick={handleCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">취소</button>
+                <button onClick={handleSave} className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700">저장</button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400 p-1">
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full rounded-full object-cover bg-white"
+                  />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-gray-800">{user.name}</h2>
+                  <p className="text-gray-600">{user.nickname}</p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center space-x-1">
+                      <i className="ri-vip-crown-fill text-yellow-500"></i>
+                      <span className="text-sm font-medium">레벨 {user.level}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <i className="ri-coin-fill text-purple-500"></i>
+                      <span className="text-sm font-medium">{user.totalScore}점</span>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => setIsEditing(true)} className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-purple-600">
+                  <i className="ri-pencil-line text-xl"></i>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Goal Progress Dashboard */}
