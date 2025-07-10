@@ -87,7 +87,7 @@ export default function MyPage() {
       reader.onloadend = () => {
         setEditedAvatar(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file);//
     }
   };
 
