@@ -36,33 +36,6 @@ interface MyRecord {
     public: boolean;
 }
 
-interface User {
-  name: string;
-  nickname: string;
-  avatar: string;
-  level: number;
-  totalScore: number;
-}
-
-interface Goal {
-  id: string;
-  name: string;
-  progress: number;
-  target: number;
-  color: string;
-}
-
-interface Badge {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  color: string;
-  earned: boolean;
-  progress: number;
-  target: number;
-}
-
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState('전체');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -82,28 +55,7 @@ export default function Home() {
   ]);
   const [recentActivities, setRecentActivities] = useLocalStorage<any[]>('recentActivities', []);
   const [myRecords, setMyRecords] = useLocalStorage<MyRecord[]>('myRecords', []);
-  const [user, setUser] = useLocalStorage<User>('user', {
-    name: '김이상',
-    nickname: '@isang_achiever',
-    avatar: 'https://readdy.ai/api/search-image?query=friendly%20Korean%20person%20profile%20photo%2C%20professional%20headshot%2C%20clean%20background%2C%20realistic%20portrait%20photography%2C%20natural%20lighting&width=120&height=120&seq=mypage1&orientation=squarish',
-    level: 15,
-    totalScore: 2847
-  });
-  const [goals, setGoals] = useLocalStorage<Goal[]>('goals', [
-    { id: '1', name: '운동', progress: 0, target: 100, color: 'from-orange-400 to-red-500' },
-    { id: '2', name: '학습', progress: 0, target: 100, color: 'from-blue-400 to-indigo-500' },
-    { id: '3', name: '업무', progress: 0, target: 100, color: 'from-green-400 to-emerald-500' },
-    { id: '4', name: '건강', progress: 0, target: 100, color: 'from-cyan-400 to-teal-500' },
-    { id: '5', name: '개인성장', progress: 0, target: 100, color: 'from-purple-400 to-pink-500' },
-  ]);
-  const [badges, setBadges] = useLocalStorage<Badge[]>('badges', [
-    { id: '1', name: '3일 연속', description: '3일 연속 할일 완료', icon: 'ri-fire-fill', color: 'from-orange-400 to-red-500', earned: false, progress: 0, target: 3 },
-    { id: '2', name: '100점 돌파', description: '총 점수 100점 달성', icon: 'ri-trophy-fill', color: 'from-yellow-400 to-orange-500', earned: false, progress: 0, target: 100 },
-    { id: '3', name: '완벽한 주', description: '일주일 모든 할일 완료', icon: 'ri-star-fill', color: 'from-purple-400 to-pink-500', earned: false, progress: 0, target: 1 },
-    { id: '4', name: '초보 탈출', description: '레벨 10 달성', icon: 'ri-rocket-fill', color: 'from-blue-400 to-indigo-500', earned: false, progress: 0, target: 10 },
-    { id: '5', name: '월간 왕', description: '한 달간 1위 유지', icon: 'ri-crown-fill', color: 'from-purple-500 to-pink-600', earned: false, progress: 0, target: 30 },
-    { id: '6', name: '마스터', description: '레벨 50 달성', icon: 'ri-award-fill', color: 'from-green-400 to-emerald-500', earned: false, progress: 0, target: 50 },
-  ]);
+
 
   const [showDeleteMode, setShowDeleteMode] = useState(false);
 
@@ -133,8 +85,6 @@ export default function Home() {
   const handleRecordConfirm = (settings: { public: boolean; share: boolean }) => {
     if (selectedTask && taskProof) {
         const now = new Date();
-        
-        // 1. Update the task's completion status
         const updatedTasks = tasks.map(task => 
             task.id === selectedTask.id 
             ? { ...task, completed: true, progress: 100, completedAt: now.toISOString() }
@@ -142,59 +92,6 @@ export default function Home() {
         );
         setTasks(updatedTasks);
 
-        // 2. Calculate Score
-        let pointsEarned = 0;
-        const priorityPoints = { high: 100, medium: 50, low: 20 };
-        pointsEarned += priorityPoints[selectedTask.priority];
-
-        if (selectedTask.deadline && selectedTask.completedAt) {
-            const deadlineTime = new Date(selectedTask.deadline).getTime();
-            const completedTime = new Date(selectedTask.completedAt).getTime();
-            const oneDayMs = 24 * 60 * 60 * 1000;
-
-            if (completedTime < deadlineTime) {
-                const timeDiffMs = deadlineTime - completedTime;
-                const daysEarly = timeDiffMs / oneDayMs;
-                pointsEarned += Math.round(daysEarly * 10); // 10 points per day early
-            }
-        }
-        
-        // Update user's total score
-        setUser(prevUser => ({ ...prevUser, totalScore: prevUser.totalScore + pointsEarned }));
-
-        // 3. Update Goal Progress and Award Badges
-        const goalToBadgeMap: { [key: string]: string } = {
-            '운동': '1', 
-            '학습': '2', 
-            '업무': '3', 
-            '건강': '4', 
-            '개인성장': '5', 
-        };
-
-        setGoals(prevGoals => {
-            const updatedGoals = prevGoals.map(goal => {
-                if (goal.name === selectedTask.goalName) {
-                    const newProgress = Math.min(goal.target, goal.progress + pointsEarned); 
-                    // Check if goal is now completed and award badge
-                    if (newProgress >= goal.target) {
-                        const badgeIdToAward = goalToBadgeMap[goal.name];
-                        if (badgeIdToAward) {
-                            setBadges(prevBadges => prevBadges.map(badge => {
-                                if (badge.id === badgeIdToAward && !badge.earned) {
-                                    return { ...badge, earned: true, progress: badge.target };
-                                }
-                                return badge;
-                            }));
-                        }
-                    }
-                    return { ...goal, progress: newProgress };
-                }
-                return goal;
-            });
-            return updatedGoals;
-        });
-
-        // 4. Create a new activity for the user's private activity log
         const newActivity = {
             id: `activity-${Date.now()}`,
             task: `${selectedTask.title} 완료`,
@@ -204,7 +101,6 @@ export default function Home() {
         };
         setRecentActivities([newActivity, ...recentActivities]);
 
-        // 5. Create the record for "My Records". Its visibility is controlled by the toggle.
         const newRecord: MyRecord = {
             id: `record-${Date.now()}`,
             date: now.toISOString().split('T')[0],
@@ -214,8 +110,6 @@ export default function Home() {
         };
         setMyRecords([newRecord, ...myRecords]);
     }
-    
-    // 6. Reset states
     setSelectedTask(null);
     setTaskProof(null);
     setIsRecordModalOpen(false);
