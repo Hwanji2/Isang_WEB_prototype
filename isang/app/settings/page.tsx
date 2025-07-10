@@ -191,7 +191,8 @@ export default function SettingsPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      option.toggleAction(!option.toggleValue);
+                  option.toggleAction?.(!option.toggleValue);
+
                     }}
                     className={`relative w-12 h-6 rounded-full transition-all duration-200 !rounded-button ${
                       option.toggleValue ? 'bg-purple-500' : 'bg-gray-300'
