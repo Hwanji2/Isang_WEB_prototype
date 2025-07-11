@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { AuthContext } from './context/AuthContext';
 import BottomNav from '../components/BottomNav';
 import TaskCard from '../components/TaskCard';
 import FloatingAddButton from '../components/FloatingAddButton';
@@ -37,6 +39,15 @@ interface MyRecord {
 }
 
 export default function Home() {
+  const { currentUser } = useContext(AuthContext) || {};
+  const router = useRouter();
+
+  useEffect(() => {
+    if (currentUser === null) {
+      router.push('/login');
+    }
+  }, [currentUser, router]);
+
   const [activeFilter, setActiveFilter] = useState('전체');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
@@ -174,6 +185,10 @@ export default function Home() {
     return getDynamicPriority(b) - getDynamicPriority(a);
   });
 
+  if (!currentUser) {
+    return null; // Or a loading spinner
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -275,3 +290,4 @@ export default function Home() {
     </div>
   );
 }
+
