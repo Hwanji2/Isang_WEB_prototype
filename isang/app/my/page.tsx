@@ -40,7 +40,7 @@ export default function MyPage() {
   const [editedName, setEditedName] = useState(user.name);
   const [editedAvatar, setEditedAvatar] = useState(user.avatar);
 
-  const [goals, setGoals] = useLocalStorage('goals', [
+  const [goals] = useLocalStorage('goals', [
     { id: '1', name: '운동', progress: 85, target: 100, color: 'from-orange-400 to-red-500' },
     { id: '2', name: '학습', progress: 72, target: 100, color: 'from-blue-400 to-indigo-500' },
     { id: '3', name: '업무', progress: 90, target: 100, color: 'from-green-400 to-emerald-500' },
@@ -367,7 +367,11 @@ export default function MyPage() {
                   <p className="font-medium text-gray-800">{activity.task}</p>
                   <p className="text-sm text-gray-600">{activity.time}</p>
                   {activity.proof && (
-                    <p className="text-xs text-gray-500 mt-1 italic">"{activity.proof}"</p>
+               <>
+    {/* eslint-disable react/no-unescaped-entities */}
+    <p className="text-xs text-gray-500 mt-1 italic">&quot;{activity.proof}&quot;</p>
+    {/* eslint-enable react/no-unescaped-entities */}
+  </>
                   )}
                 </div>
                 <button

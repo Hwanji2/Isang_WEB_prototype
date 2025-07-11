@@ -59,7 +59,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p className="mt-4 text-center">
-          Don't have an account?{' '}
+   <p>Don&apos;t have an account?{' '}</p>
           <a href="/signup" className="text-blue-500">
             Sign up
           </a>

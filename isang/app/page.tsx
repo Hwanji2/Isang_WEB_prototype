@@ -69,7 +69,7 @@ export default function Home() {
 
 
   const [showDeleteMode, setShowDeleteMode] = useState(false);
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getAIPriority = (title: string, category: string) => {
     const urgentKeywords = ['긴급', '마감', '중요', '회의', '프로젝트', '시험', '발표'];
     const routineKeywords = ['물', '운동', '산책', '독서', '정리'];

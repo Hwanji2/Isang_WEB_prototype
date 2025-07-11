@@ -21,6 +21,7 @@ export default function TaskCreationModal({
 }: TaskCreationModalProps) {
   const [taskTitle, setTaskTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
