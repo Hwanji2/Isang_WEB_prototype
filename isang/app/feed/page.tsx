@@ -1,10 +1,21 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { AuthContext } from '../context/AuthContext';
 import BottomNav from '../../components/BottomNav';
 
 export default function FeedPage() {
+  const { currentUser } = useContext(AuthContext) || {};
+  const router = useRouter();
+
+  useEffect(() => {
+    if (currentUser === null) {
+      router.push('/login');
+    }
+  }, [currentUser, router]);
+
   const [posts, setPosts] = useState([
     {
       id: '1',
@@ -101,6 +112,10 @@ export default function FeedPage() {
       return post;
     }));
   };
+
+  if (!currentUser) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 pb-24">

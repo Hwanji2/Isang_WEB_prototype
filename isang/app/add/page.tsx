@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
+import { AuthContext } from '../context/AuthContext';
 import BottomNav from '../../components/BottomNav';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
@@ -17,7 +18,15 @@ interface Task {
 }
 
 export default function AddPage() {
+  const { currentUser } = useContext(AuthContext) || {};
   const router = useRouter();
+
+  useEffect(() => {
+    if (currentUser === null) {
+      router.push('/login');
+    }
+  }, [currentUser, router]);
+
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [taskTitle, setTaskTitle] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -63,6 +72,10 @@ export default function AddPage() {
       router.push('/');
     }
   };
+
+  if (!currentUser) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 pb-24">
