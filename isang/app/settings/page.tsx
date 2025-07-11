@@ -187,8 +187,7 @@ export default function SettingsPage() {
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
           <h3 className="text-lg font-bold text-gray-800 mb-4">General</h3>
           <div className="space-y-1">
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            {settingsOptions.map((option, index) => (
+            {settingsOptions.map((option) => (
               <div
                 key={option.id}
                 className="flex items-center justify-between p-4 hover:bg-white/50 rounded-2xl transition-all duration-200 cursor-pointer"
