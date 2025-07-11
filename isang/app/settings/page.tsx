@@ -229,7 +229,7 @@ export default function SettingsPage() {
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-6 shadow-lg">
           <h3 className="text-lg font-bold text-gray-800 mb-4">Account</h3>
           <div className="space-y-1">
-            {accountOptions.map((option, index) => (
+            {accountOptions.map((option) => (
               <button
                 key={option.id}
                 onClick={() => handleSettingClick(option.id)}
